@@ -112,10 +112,26 @@ static Adafruit_INA3221 INA3221;
 
 #if ENV_INCLUDE_INA219
 #ifndef TELEM_INA219_ADDRESS
-#define TELEM_INA219_ADDRESS    0x40      // INA219 single channel current sensor I2C address
+#define TELEM_INA219_ADDRESS    0x40      // Default INA219 I2C address
 #endif
 #include <Adafruit_INA219.h>
-static Adafruit_INA219 INA219(TELEM_INA219_ADDRESS);
+static Adafruit_INA219 INA219_40(TELEM_INA219_ADDRESS);
+static Adafruit_INA219 INA219_41(0x41);   // RAK16000 WisBlock default I2C address
+
+static Adafruit_INA219& get_ina219(uint8_t addr) {
+  return (addr == 0x41) ? INA219_41 : INA219_40;
+}
+
+static int init_ina219(TwoWire* wire, uint8_t addr) {
+  return get_ina219(addr).begin(wire) ? 1 : 0;
+}
+
+static void query_ina219(uint8_t ch, uint8_t addr, CayenneLPP& lpp) {
+  Adafruit_INA219& ina = get_ina219(addr);
+  lpp.addVoltage(ch, ina.getBusVoltage_V());
+  lpp.addCurrent(ch, ina.getCurrent_mA() / 1000.0f);
+  lpp.addPower(ch, ina.getPower_mW() / 1000.0f);
+}
 #endif
 
 #if ENV_INCLUDE_INA260
