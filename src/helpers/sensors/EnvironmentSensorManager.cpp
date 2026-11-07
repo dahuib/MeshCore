@@ -678,6 +678,16 @@ bool EnvironmentSensorManager::begin() {
     }
   }
 
+  #if defined(RAK_BOARD) && defined(WB_IO2) && !defined(RAK_3401) && !defined(ETHERNET_ENABLED)
+  if (_active_sensor_count == 0
+    #if ENV_INCLUDE_GPS
+      && !gps_detected
+    #endif
+  ) {
+    pinMode(WB_IO2, INPUT);
+  }
+  #endif
+
   return true;
 }
 
